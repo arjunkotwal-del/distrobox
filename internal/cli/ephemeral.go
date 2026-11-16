@@ -124,6 +124,17 @@ func ephemeralAction(ctx context.Context, cmd *cli.Command, cfg *config.Values) 
 		CustomCommand: customCommand,
 	}
 
+	// The inherited create flags carry their resolved defaults in Value:, so
+	// cmd.String("name"/"hostname") is never empty. As in createAction,
+	// restore "" when neither the flag nor the config/env set them, so that
+	// EphemeralCommand.Execute generates a random container name.
+	if !cmd.IsSet("name") && cfg.ContainerName == "" {
+		opts.ContainerName = ""
+	}
+	if !cmd.IsSet("hostname") && cfg.ContainerHostname == "" {
+		opts.ContainerHostname = ""
+	}
+
 	progress := ui.NewProgress(os.Stderr)
 	printer := ui.NewPrinter(os.Stderr, true)
 	prompter := ui.NewPrompter(*bufio.NewReader(os.Stdin), os.Stdout)

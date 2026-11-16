@@ -21,6 +21,7 @@ package cli
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -147,4 +148,16 @@ func TestEphemeralCommand_ContainerNameFromFlag(t *testing.T) {
 
 	assert.Equal(t, "my-ephemeral", opts.ContainerName)
 	assert.Equal(t, []string{"echo", "ciao"}, opts.CustomCommand)
+}
+
+// TestEphemeralCommand_GeneratesRandomNameWithoutFlag ensures that, when
+// neither --name nor a configured container name is supplied, ephemeral
+// generates a random `distrobox-XXXX` name instead of falling back to the
+// --name flag's default ("my-distrobox"), matching distrobox-ephemeral.
+func TestEphemeralCommand_GeneratesRandomNameWithoutFlag(t *testing.T) {
+	opts := runEphemeral(t, "ephemeral", "--image", "alpine", "-e", "echo", "ciao")
+
+	assert.NotEqual(t, config.DefaultValues().DefaultContainerName, opts.ContainerName)
+	assert.True(t, strings.HasPrefix(opts.ContainerName, "distrobox-"),
+		"expected a generated distrobox-* name, got %q", opts.ContainerName)
 }
